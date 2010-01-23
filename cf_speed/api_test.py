@@ -3,8 +3,7 @@
 import os
 import cloudfiles
 
-username = 'xxxx'
-apikey = 'xxxx'
+from cf_auth import username, apikey
 
 conn = cloudfiles.get_connection(username, apikey)
 

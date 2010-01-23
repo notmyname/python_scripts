@@ -3,8 +3,7 @@
 import os
 import httplib
 
-username = 'xxxx'
-apikey = 'xxxx'
+from cf_auth import username, apikey
 
 # auth
 conn = httplib.HTTPSConnection('api.mosso.com')
