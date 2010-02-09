@@ -10,16 +10,11 @@ import cloudfiles
 
 import cf_auth
 
-conn = cloudfiles.get_connection(username=cf_auth.username, api_key=cf_auth.apikey)
-log_container_name = '.CDN_ACCESS_LOGS'
-try:
-    log_container = conn.get_container(log_container_name)
-except NameError:
-    print >>sys.stderr, 'No CDN logs found'
-    sys.exit(1)
+GROUP_KEYS = 'obj_name ip ident http_user date request_line response_code response_size referrer user_agent container_name'.split()
 
 class LogLine(object):
-    def __init__(self, ip, ident, http_user, date, request_line, response_code, response_size, referrer, user_agent):
+    def __init__(self, container_name, ip, ident, http_user, date, request_line, response_code, response_size, referrer, user_agent):
+        self.container_name = container_name
         self.ip = ip
         self.ident = ident
         self.http_user = http_user
@@ -43,7 +38,7 @@ class LogStats(object):
         if 'count' not in d:
             d['count'] = 0
         d['count'] += 1
-        for key in 'obj_name ip ident http_user date request_line response_code response_size referrer user_agent'.split():
+        for key in GROUP_KEYS:
             val = getattr(log_line, key)
             if key in d:
                 d[key].add(val)
@@ -61,22 +56,39 @@ class LogStats(object):
             ret.append('Referrers: %s' % ' '.join(d['referrer']))
             ret.append('IPs: %s' % ' '.join(d['ip']))
             ret.append('Dates: %s' % ' '.join(d['date']))
+            ret.append('Container Name: %s' % ' '.join(d['container_name']))
             ret.append('')
         return '\n'.join(ret)
 
-log_files = log_container.list_objects()
-aggregate_stats = LogStats()
-log_line_regex = re.compile(r'(\d+\.\d+\.\d+\.\d+) (.*) (.*) \[(.*)\] "(.*)" (\d+) (.*) "(.*)" "(.*)"')
-for filename in log_files[:20]:
-    container_name, date = filename[:-23], filename[-22:]
-    log_obj = log_container.get_object(filename)
-    buf = cStringIO.StringIO(log_obj.read())
-    plain = gzip.GzipFile(fileobj=buf).read()
-    for line in plain.split('\n'):
-        if not line:
-            continue
-        m = log_line_regex.match(line)
-        log_line = LogLine(*m.groups())
-        aggregate_stats.add(log_line)
-    
-print aggregate_stats
+if __name__ == '__main__':
+    try:
+        group_on = sys.argv[1]
+    except IndexError:
+        group_on = 'obj_name'
+    if group_on not in GROUP_KEYS:
+        print >>sys.stderr, '%s is not one of "%s"' % (group_on, ' '.join(GROUP_KEYS))
+        sys.exit(1)
+
+    conn = cloudfiles.get_connection(username=cf_auth.username, api_key=cf_auth.apikey)
+    log_container_name = '.CDN_ACCESS_LOGS'
+    try:
+        log_container = conn.get_container(log_container_name)
+    except NameError:
+        print >>sys.stderr, 'No CDN logs found'
+        sys.exit(1)
+
+    log_files = log_container.list_objects()
+    aggregate_stats = LogStats(group_on=group_on)
+    log_line_regex = re.compile(r'(\d+\.\d+\.\d+\.\d+) (.*) (.*) \[(.*)\] "(.*)" (\d+) (.*) "(.*)" "(.*)"')
+    for filename in log_files:
+        container_name, date = filename[:-23], filename[-22:]
+        log_obj = log_container.get_object(filename)
+        buf = cStringIO.StringIO(log_obj.read())
+        plain = gzip.GzipFile(fileobj=buf).read()
+        for line in plain.split('\n'):
+            if not line:
+                continue
+            m = log_line_regex.match(line)
+            log_line = LogLine(container_name, *m.groups())
+            aggregate_stats.add(log_line)    
+    print aggregate_stats
