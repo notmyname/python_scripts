@@ -25,28 +25,28 @@ def do_something(f):
     print 'compressed size:', len(buff)
     print 'do they match: ', test_data == zlib.decompress(buff)
 
-class Enc(object):
+class CompressedFileReader(object):
     def __init__(self, file_obj):
         self._f = file_obj
-        self.compressor = zlib.compressobj(9)
+        self._compressor = zlib.compressobj(9)
         self.done = False
     
     def read(self, *a, **kw):
         if self.done:
             return ''
         x = self._f.read(*a, **kw)
-        if not x:
-            compressed = self.compressor.flush(zlib.Z_FINISH)
-            self.done = True
-        else:
-            compressed = self.compressor.compress(x)
+        if x:
+            compressed = self._compressor.compress(x)
             if not compressed:
-                compressed = self.compressor.flush(zlib.Z_SYNC_FLUSH)
+                compressed = self._compressor.flush(zlib.Z_SYNC_FLUSH)
+        else:
+            compressed = self._compressor.flush(zlib.Z_FINISH)
+            self.done = True
         return compressed
 
 f = open(filename, 'rb')
-enc = Enc(f)
-do_something(enc)
+compressed_f = CompressedFileReader(f)
+do_something(compressed_f)
 f.close()
 
 os.unlink(filename)
