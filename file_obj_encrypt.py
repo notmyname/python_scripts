@@ -14,14 +14,16 @@ f.write(test_data)
 f.close()
 
 def do_something(f):
-    size = 256
+    size = 1024 # compression gets better as this goes up (don't set it too small)
     buff = []
     x = f.read(size)
     while x:
         buff.append(x)
         x = f.read(size)
     buff = ''.join(buff)
-    print test_data == zlib.decompress(buff)
+    print 'original size:', len(test_data)
+    print 'compressed size:', len(buff)
+    print 'do they match: ', test_data == zlib.decompress(buff)
 
 class Enc(object):
     def __init__(self, file_obj):
