@@ -28,10 +28,24 @@ def do_something(f):
     return buff
 
 class CompressedFileReader(object):
-    '''gzip header and footer code taken from the python stdlib gzip module'''
-    def __init__(self, file_obj):
+    '''
+    Wraps a file object and provides a read method that returns gzip'd data.
+    
+    One warning: if read is called with a small value, the data returned may
+    be bigger than the value. In this case, the "compressed" data will be
+    bigger than the original data. To solve this, use a bigger read buffer.
+    
+    An example use case:
+    Given an uncompressed file on disk, provide a way to read compressed data
+    without buffering the entire file data in memory. Using this class, an
+    uncompressed log file could be uploaded as compressed data with chunked 
+    transfer encoding.
+    
+    gzip header and footer code taken from the python stdlib gzip module
+    '''
+    def __init__(self, file_obj, compresslevel=9):
         self._f = file_obj
-        self._compressor = zlib.compressobj(9,
+        self._compressor = zlib.compressobj(compresslevel,
                                             zlib.DEFLATED,
                                             -zlib.MAX_WBITS,
                                             zlib.DEF_MEM_LEVEL,
@@ -53,10 +67,8 @@ class CompressedFileReader(object):
                 compressed = self._compressor.flush(zlib.Z_SYNC_FLUSH)
         else:
             compressed = self._compressor.flush(zlib.Z_FINISH)
-            i = self.crc32 & 0xffffffffL
-            crc32 = struct.pack("<L", i)
-            i = self.total_size & 0xffffffffL
-            size = struct.pack("<L", i)
+            crc32 = struct.pack("<L", self.crc32 & 0xffffffffL)
+            size = struct.pack("<L", self.total_size & 0xffffffffL)
             footer = crc32 + size
             compressed += footer
             self.done = True
