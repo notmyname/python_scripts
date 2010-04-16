@@ -10,22 +10,7 @@ import struct
 
 filename = 'test'
 
-f = open(filename, 'wb')
 test_data = 'test data\nline two\nline three'*50
-f.write(test_data)
-f.close()
-
-def do_something(f):
-    size = 1024 # compression gets better as this goes up (don't set it too small)
-    buff = []
-    x = f.read(size)
-    while x:
-        buff.append(x)
-        x = f.read(size)
-    buff = ''.join(buff)
-    print 'original size:', len(test_data)
-    print 'compressed size:', len(buff)
-    return buff
 
 class CompressedFileReader(object):
     '''
@@ -78,18 +63,43 @@ class CompressedFileReader(object):
             compressed = header + compressed
         return compressed
 
+
+def do_something(f):
+    size = 1024 # compression gets better as this goes up (don't set it too small)
+    buff = []
+    x = f.read(size)
+    while x:
+        buff.append(x)
+        x = f.read(size)
+    buff = ''.join(buff)
+    print 'original size:', len(test_data)
+    print 'compressed size:', len(buff)
+    print 'data matches:', test_data == zlib.decompress(buff, 16+zlib.MAX_WBITS)
+    return buff
+
+
+# make a test file
+f = open(filename, 'wb')
+f.write(test_data)
+f.close()
+
+# using the uncompressed file, test the compressor wrapper
 f = open(filename, 'rb')
 compressed_f = CompressedFileReader(f)
 compressed_data = do_something(compressed_f)
 f.close()
 
+# write the compressed data out (for the next test)
 f = open(filename, 'wb')
 f.write(compressed_data)
 f.close()
 
+# make sure the compressed data can be read by gzip (ensures tools like gunzip will work)
 f = gzip.GzipFile(filename, 'rb')
 d = f.read()
 assert test_data == d
+print 'Passed: compressed data was successfully read by gzip'
 f.close()
 
+# clean up
 os.unlink(filename)
