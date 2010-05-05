@@ -1,0 +1,52 @@
+body {
+    width: 600px;
+    color: #000;
+    background: #fff;
+    font-family: Futura, sans;
+    size: 24pt;
+}
+
+body #server_stats, body #website_stats {
+    float: left;
+    -webkit-border-radius: 10px;
+    background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#555), to(#000));
+    color: #ccc;
+    width: 250px;
+    padding: 10px;
+    margin: 0 10px;
+}
+
+body div>div {
+    margin-bottom: 10px;
+}
+
+#current_time {
+    width: 100%;
+    background: transparent;
+    clear: both;
+}
+
+h1, h2, h3 {
+    text-align: center;
+}
+
+h2, h3 {
+    margin: 0;
+    padding: 1px;
+}
+
+#uptime {
+    text-align: center;
+}
+
+.warning {
+    -webkit-border-radius: 10px;
+    background: -webkit-gradient(radial, 50% -20, 0, 50% 0, 200, from(#900), to(rgba(204,0,0,.25)));
+}
+
+#server_stats div>span {
+    width: 50%;
+    display: inline-block;
+    margin: 0 auto;
+    padding: 0;
+}
