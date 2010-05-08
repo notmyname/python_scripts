@@ -1,7 +1,7 @@
 body {
     width: 600px;
-    color: #000;
-    background: #fff;
+    color: #ccc;
+    background: #000;
     font-family: Futura, sans;
     size: 24pt;
 }
@@ -9,7 +9,7 @@ body {
 body #server_stats, body #website_stats {
     float: left;
     -webkit-border-radius: 10px;
-    background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#555), to(#000));
+    background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#555), to(#333));
     color: #ccc;
     width: 250px;
     padding: 10px;
@@ -40,8 +40,10 @@ h2, h3 {
 }
 
 .warning {
+    padding: 0 8px;
+    margin: 0 -8px 10px;
     -webkit-border-radius: 10px;
-    background: -webkit-gradient(radial, 50% -20, 0, 50% 0, 200, from(#900), to(rgba(204,0,0,.25)));
+    background: -webkit-gradient(radial, 50% -20, 0, 50% 0, 200, from(#c00), to(rgba(204,0,0,.25)));
 }
 
 #server_stats div>span {

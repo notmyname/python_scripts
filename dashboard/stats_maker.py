@@ -30,9 +30,14 @@ def get_used():
 
 def get_uptime():
     raw = get_result('/usr/gnu/bin/uptime')
-    parts = raw.split()[2:5]
-    days = int(parts[0])
-    hours, minutes = parts[2][:-1].split(':')
+    if 'days' in raw:
+        parts = raw.split()[2:5]
+        days = int(parts[0])
+        hours, minutes = parts[2][:-1].split(':')
+    else:
+        parts = raw.split()
+        days = 0
+        hours, minutes = parts[2][:-1].split(':')
     hours = int(hours)
     minutes = int(minutes)
     return '%d days, %d hours, %s minutes' % (days, hours, minutes)
