@@ -9,24 +9,13 @@ def get_result(cmd):
     x.stdout.close()
     return ret
 
-def fix_size(size):
-    if size.endswith('T'):
-        size = float(size[:-1]) * 2**40
-    elif size.endswith('G'):
-        size = float(size[:-1]) * 2**30
-    elif size.endswith('M'):
-        size = float(size[:-1]) * 2**20
-    return int(size)
-
 def get_available():
-    raw = get_result('/usr/sbin/zfs get available tank')
-    size = raw.split()[-2]
-    return fix_size(size)
+    raw = int(get_result('/usr/sbin/zfs get -H -o value -p available tank').strip())
+    return raw
 
 def get_used():
-    raw = get_result('/usr/sbin/zfs get used tank')
-    size = raw.split()[-2]
-    return fix_size(size)
+    raw = int(get_result('/usr/sbin/zfs get -H -o value -p used tank').strip())
+    return raw
 
 def get_uptime():
     raw = get_result('/usr/gnu/bin/uptime')
@@ -45,23 +34,15 @@ def get_uptime():
 stats = {}
 start_time = time.time()
 
-rpool_status = False # assume the worst
+rpool_status = 'Not Healthy' # assume the worst
 if get_result('/usr/sbin/zpool status -x rpool').endswith('is healthy'):
-    rpool_status = True
+    rpool_status = 'Healthy'
 stats['rpool_healthy'] = rpool_status
-if rpool_status:
-    stats['rpool_warning'] = ''
-else:
-    stats['rpool_warning'] = 'warning'
 
-tank_status = False # assume the worst
+tank_status = 'not Healthy' # assume the worst
 if get_result('/usr/sbin/zpool status -x tank').endswith('is healthy'):
-    tank_status = True
+    tank_status = 'Healthy'
 stats['tank_healthy'] = tank_status
-if tank_status:
-    stats['tank_warning'] = ''
-else:
-    stats['tank_warning'] = 'warning'
 
 stats['file_server_uptime'] = get_uptime()
 
@@ -123,10 +104,10 @@ uptime = '''
 '''
 
 pools = '<div id="pools"><h3>Filesystem Status</h3><div id="rpool_status"'
-if stats['rpool_healthy'] is False:
+if stats['rpool_healthy'] == 'Not Healthy':
     pools += ' class="warning"'
 pools += '><span>rpool</span><span>%(rpool_healthy)s</span></div><div id="tank_status"'
-if stats['tank_healthy'] is False:
+if stats['tank_healthy'] == 'Not Healthy':
     pools += ' class="warning"'
 pools += '><span>tank</span><span>%(tank_healthy)s</span></div></div>'
 
