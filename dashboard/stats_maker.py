@@ -145,7 +145,7 @@ if stats['karen_last_backup'] is None:
 backups += '><span>karen&apos;s laptop</span><span>%(karen_last_backup)s</span></div></div>'
 
 server_stats = '''
-<div id="server_stats"><h2>Server Stats</h2>%s%s%s%s</div>
+<div id="server_stats"><h2>File Server Stats</h2>%s%s%s%s</div>
 ''' % (disk_stats, uptime, pools, backups)
 
 server_stats = server_stats % stats
