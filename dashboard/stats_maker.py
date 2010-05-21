@@ -67,8 +67,13 @@ try:
 except OSError:
     stats['work_last_backup'] = None
 
-stats['space_available'] = get_available()
-stats['space_used'] = get_used()
+free = get_available()
+used = get_used()
+total = float(free + used)
+free = free / total * 100.0
+used = used / total * 100.0
+stats['space_available'] = '%.2f %%' % free
+stats['space_used'] = '%.2f %%' % used
 
 stats['current_time'] = time.strftime('%X %m/%d/%Y')
 
@@ -91,10 +96,10 @@ template = '''
 </html>
 '''
 
-disk_stats = '<div id="disk_space"><h3>Disk Space</h3><div id="space_used"><span>bytes used</span><span>%(space_used)s</span></div><div id="space_available"'
+disk_stats = '<div id="disk_space"><h3>Disk Space</h3><div id="space_used"><span>Used</span><span>%(space_used)s</span></div><div id="space_available"'
 if stats['space_available'] < (50 * 2**30):
     disk_stats += ' class="warning"'
-disk_stats += '><span>bytes available</span><span>%(space_available)s</span></div></div>'
+disk_stats += '><span>Available</span><span>%(space_available)s</span></div></div>'
 
 uptime = '''
 <div id="uptime">
