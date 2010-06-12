@@ -1,4 +1,5 @@
 import time
+import datetime
 import subprocess
 import os
 
@@ -48,6 +49,7 @@ stats['file_server_uptime'] = get_uptime()
 
 try:
     t = os.stat('/tank/backups/imac_sync_file').st_mtime
+    stats['imac_last_backup_age'] = datetime.timedelta(seconds=(time.time()-t))
     t = time.strftime('%X %m/%d/%Y', time.localtime(t))
     stats['imac_last_backup'] = t
 except OSError:
@@ -55,6 +57,7 @@ except OSError:
 
 try:
     t = os.stat('/tank/backups/karen_laptop_sync_file').st_mtime
+    stats['karen_last_backup_age'] = datetime.timedelta(seconds=(time.time()-t))
     t = time.strftime('%X %m/%d/%Y', time.localtime(t))
     stats['karen_last_backup'] = t
 except OSError:
@@ -62,6 +65,7 @@ except OSError:
 
 try:
     t = os.stat('/tank/backups/work_backup_sync_file').st_mtime
+    stats['work_last_backup_age'] = datetime.timedelta(seconds=(time.time()-t))
     t = time.strftime('%X %m/%d/%Y', time.localtime(t))
     stats['work_last_backup'] = t
 except OSError:
@@ -85,6 +89,8 @@ template = '''
 <head>
 <title>Dashboard</title>
 <link href="styles.css" rel="stylesheet" type="text/css" />
+<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0" />
+<meta name="format-detection" content="telephone=no" />
 </head>
 <body>
 <h1>Dashboard</h1>
@@ -120,13 +126,14 @@ backups = '''
 <div id="last_backups">
     <h3>Last Backups</h3>
     <div id="imac"'''
-if stats['imac_last_backup'] is None:
+warning_cutoff = datetime.timedelta(days=1) # warn if backups are more that this age
+if stats['imac_last_backup'] is None or stats['imac_last_backup_age'] > warning_cutoff:
     backups += ' class="warning"'
 backups += '><span>imac</span><span>%(imac_last_backup)s</span></div><div id="work_laptop"'
-if stats['work_last_backup'] is None:
+if stats['work_last_backup'] is None or stats['work_last_backup_age'] > warning_cutoff:
     backups += ' class="warning"'
 backups += '><span>work laptop</span><span>%(work_last_backup)s</span></div><div id="karen_laptop"'
-if stats['karen_last_backup'] is None:
+if stats['karen_last_backup'] is None or stats['karen_last_backup_age'] > warning_cutoff:
     backups += ' class="warning"'
 backups += '><span>karen&apos;s laptop</span><span>%(karen_last_backup)s</span></div></div>'
 
