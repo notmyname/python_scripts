@@ -40,7 +40,7 @@ if get_result('/usr/sbin/zpool status -x rpool').endswith('is healthy'):
     rpool_status = 'Healthy'
 stats['rpool_healthy'] = rpool_status
 
-tank_status = 'not Healthy' # assume the worst
+tank_status = 'Not Healthy' # assume the worst
 if get_result('/usr/sbin/zpool status -x tank').endswith('is healthy'):
     tank_status = 'Healthy'
 stats['tank_healthy'] = tank_status
