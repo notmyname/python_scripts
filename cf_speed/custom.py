@@ -18,7 +18,7 @@ url = resp.getheader('x-storage-url')
 conn.close()
 # send data
 send_headers = {'X-Auth-Token': auth_token, 'Content-Type': 'text/plain'}
-container_path = '/' + '/'.join(url.split('/')[3:]) + '/' + container_name
+container_path = '/' + '/'.join(url.split('/')[3:]) + '/container_name'
 conn = httplib.HTTPSConnection(url.split('/')[2])
 conn.request('PUT', container_path, headers=send_headers)
 conn.getresponse().read()
