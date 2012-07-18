@@ -8,7 +8,7 @@ import time
 from cf_auth import username, apikey
 
 container_name = sys.argv[1]
-
+bytes_to_upload = int(sys.argv[2])
 use_service_net = os.environ.get('USECFSERVICENET', False)
 
 # auth
@@ -28,16 +28,24 @@ if use_service_net:
 conn = httplib.HTTPSConnection(storage_url)
 conn.request('PUT', container_path, headers=send_headers)
 conn.getresponse().read()
-data_list = ('test_data/%s' % x for x in os.listdir('test_data')
-             if x.endswith('.dat'))
-for filename in data_list:
-    start = time.time()
-    with open(filename, 'rb') as f:
-        conn.request('PUT', container_path + '/' + filename, body=f,
-             headers=send_headers)
-    resp = conn.getresponse()
-    resp.read()
-    if resp.status >= 300:
-        print resp.status, resp.reason, container_path + '/' + filename
-    print '%s uploaded in %.4f seconds' % (filename, (time.time()-start))
+body = 'x' * bytes_to_upload
+filename = '%d_bytes' % bytes_to_upload
+start = time.time()
+conn.request('PUT', container_path + '/' + filename, body=body, headers=send_headers)
+resp = conn.getresponse()
+resp.read()
+dur = time.time() - start
+if resp.status >= 300:
+    print resp.status, resp.reason, container_path + '/' + filename
+else:
+    print 'uploaded %d bytes in %.4f seconds' % (bytes_to_upload, dur)
+start = time.time()
+conn.request('GET', container_path + '/' + filename, headers=send_headers)
+resp = conn.getresponse()
+resp.read()
+dur = time.time() - start
+if resp.status >= 300:
+    print resp.status, resp.reason, container_path + '/' + filename
+else:
+    print 'downloaded %d bytes in %.4f seconds' % (bytes_to_upload, dur)
 conn.close()
