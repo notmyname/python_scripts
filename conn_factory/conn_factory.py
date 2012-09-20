@@ -46,17 +46,20 @@ def PoolManager(pool):
 
 if __name__ == '__main__':
     pool_size = 5
-    p = Pool(min_size=0, max_size=pool_size, create=new_connection)
+    p = Pool(min_size=1, max_size=pool_size, create=new_connection)
     attempts = 1
-    max_attempts = 3
+    max_attempts = 5
     stale = True
     while attempts < max_attempts:
         with PoolManager(p) as i:
             try:
                 attempts += 1
+                print 'starting attempt %s' % attempts
                 print i()
                 print i(stale=stale)
-                print i(err=True)
+                #print i(err=True)
             except ProcessingError, err:
                 print err, 'as expected'
+            else:
+                break
         stale = False
