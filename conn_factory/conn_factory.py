@@ -40,7 +40,6 @@ def PoolManager(pool):
         yield i
     except StaleConnectionError, err:
         print err
-        raise
     else:
         print i(), 'returned to pool'
         pool.put(i)
@@ -52,15 +51,12 @@ if __name__ == '__main__':
     max_attempts = 3
     stale = True
     while attempts < max_attempts:
-        try:
-            with PoolManager(p) as i:
-                try:
-                    attempts += 1
-                    print i()
-                    print i(stale=stale)
-                    print i(err=True)
-                except ProcessingError, err:
-                    print err, 'as expected'
-        except StaleConnectionError:
-            pass
+        with PoolManager(p) as i:
+            try:
+                attempts += 1
+                print i()
+                print i(stale=stale)
+                print i(err=True)
+            except ProcessingError, err:
+                print err, 'as expected'
         stale = False
