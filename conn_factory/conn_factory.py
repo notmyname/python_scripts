@@ -3,7 +3,7 @@
 from contextlib import contextmanager
 from eventlet.pools import Pool
 
-counter = 0
+from uuid import uuid4
 
 class StaleConnectionError(Exception):
     '''raised when something goes wrong with a Connection'''
@@ -14,19 +14,16 @@ class ProcessingError(Exception):
 
 class Connection(object):
     def __init__(self):
-        global counter
-        counter += 1
-        self.active = True
-        self.value = counter
-        print 'new connection created'
+        self.value = uuid4().hex
+        print 'new connection %s created' % self.value
 
-    def __call__(self, err=False):
-        if self.active:
+    def __call__(self, err=False, stale=False):
+        if not stale:
             if err:
-                raise ProcessingError('blargh')
-            return 'connection %d' % self.value
+                raise ProcessingError('error on connection %s' % self.value)
+            return 'connection %s' % self.value
         else:
-            raise StaleConnectionError('not an active connection')
+            raise StaleConnectionError('connection %s not active' % self.value)
 
 
 def new_connection():
@@ -38,21 +35,32 @@ def PoolManager(pool):
     Given a pool, handle item management (like stale items in the pool)
     while passing other errors to the calling method.
     """
+    i = pool.get()
     try:
-        with pool.item() as i:
-            yield i
-    except StaleConnectionError:
-        # what happens here?
-        pass
+        yield i
+    except StaleConnectionError, err:
+        print err
+        raise
+    else:
+        print i(), 'returned to pool'
+        pool.put(i)
 
 if __name__ == '__main__':
     pool_size = 5
-    p = Pool(min_size=1, max_size=pool_size, create=new_connection)
-    with PoolManager(p) as i:
-        print i()  # should be fine
-        i.active = False
-        print i()  # should be a new connection
+    p = Pool(min_size=0, max_size=pool_size, create=new_connection)
+    attempts = 1
+    max_attempts = 3
+    stale = True
+    while attempts < max_attempts:
         try:
-            i(err=True)
-        except ProcessingError:
-            print 'some processing error caught here, as expected'
+            with PoolManager(p) as i:
+                try:
+                    attempts += 1
+                    print i()
+                    print i(stale=stale)
+                    print i(err=True)
+                except ProcessingError, err:
+                    print err, 'as expected'
+        except StaleConnectionError:
+            pass
+        stale = False
