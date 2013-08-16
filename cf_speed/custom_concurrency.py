@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import eventlet
-eventlet.monkey_patch()
+eventlet.monkey_patch(all=False, socket=True)
 
 import sys
 import httplib
@@ -55,6 +55,6 @@ len_data_list = len(data_list)
 concurrency = min(len_data_list, 20)
 print 'uploading %d files with a concurrency of %d' % (len_data_list, concurrency)
 pool = eventlet.GreenPool(size=concurrency)
-[pool.spawn(run, data_list[concurrency*i:concurrency*(i+1)])
-    for i in xrange(len_data_list/concurrency)]
+for i in xrange(len_data_list / concurrency):
+    pool.spawn(run, data_list[concurrency*i:concurrency*(i+1)])
 pool.waitall()
