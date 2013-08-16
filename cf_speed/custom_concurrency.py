@@ -27,7 +27,7 @@ if use_service_net:
 conn.close()
 
 SEND_HEADERS = {'X-Auth-Token': AUTH_TOKEN, 'Content-Type': 'text/plain'}
-CONTAINER_PATH = '/' + '/'.join(URL.split('/')[3:]) + container_name
+CONTAINER_PATH = '/' + '/'.join(URL.split('/')[3:]) + '/' + container_name
 
 # create the container
 conn = httplib.HTTPSConnection(CONNECTION_ENDPOINT)
